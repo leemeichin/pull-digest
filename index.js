@@ -9,7 +9,9 @@ const map = require('lodash.map')
 const {
   GITHUB_TOKEN: token,
   GITHUB_ORG: owner,
-  GITHUB_REPOS: repos
+  GITHUB_REPOS: repos,
+  PR_SORT_ORDER: sort = 'updated',
+  PR_STATE: state = 'open'
 } = process.env
 
 const gh = new GithubApi({
@@ -46,12 +48,7 @@ module.exports = botBuilder((req, ctx) => {
 
   return Promise.all(
     map(repos.split(' '), repo =>
-      gh.pullRequests.getAll({
-        owner,
-        repo,
-        state: 'open',
-        sort: 'updated'
-      })
+      gh.pullRequests.getAll({ owner, repo, state, sort })
     )
   )
     .then(results => flatMap(results, 'data'))
