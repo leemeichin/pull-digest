@@ -19,19 +19,21 @@ const gh = new GithubApi({
 })
 
 const buildDigest = prGroups =>
-  flatMap(prGroups, (prs, repo) => {
-    const groupTitle = `---*--- *<https://github.com/${owner}/${repo}|${repo}>}* ---*---`
+  Promise.all(
+    flatMap(prGroups, (prs, repo) => {
+      const groupTitle = `---*--- *<https://github.com/${owner}/${repo}|${repo}>}* ---*---`
 
-    const details = map(prs, pr =>
-      gh.issues
-        .get({ owner, repo, number: pr.number })
-        .then(res => res.data)
-        .then(issue => issue.labels.map(label => label.name))
-        .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
-    )
-
-    return Promise.all([Promise.resolve(groupTitle), ...details])
-  })
+      const details = map(prs, pr =>
+        gh.issues
+          .getIssueLabels({ owner, repo, number: pr.number })
+          .then(res => console.log(res) || res)
+          .then(res => res.data)
+          .then(labels => labels.map(label => label.name))
+          .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
+      )
+      return [Promise.resolve(groupTitle), ...details]
+    })
+  )
 
 const renderTemplate = (title, digest) =>
   new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
@@ -53,7 +55,7 @@ module.exports = botBuilder((req, ctx) => {
     )
   )
     .then(results => flatMap(results, 'data'))
-    .then(prs => groupBy(prs, pr => pr.head.repo.full_name))
+    .then(prs => groupBy(prs, pr => pr.head.repo.name))
     .then(prs => buildDigest(prs))
     .then(digest => renderTemplate(title, digest))
 })
