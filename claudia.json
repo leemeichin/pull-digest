@@ -1,0 +1,11 @@
+{
+  "lambda": {
+    "role": "pull-digest-executor",
+    "name": "pull-digest",
+    "region": "us-east-1"
+  },
+  "api": {
+    "id": "236wft76vh",
+    "module": "_index"
+  }
+}

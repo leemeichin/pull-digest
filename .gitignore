@@ -1,0 +1,7 @@
+node_modules/
+.aws/
+lib/
+.env
+_index.js
+test/fixtures/vcr_cassettes/
+test/fixtures/vcr_cassettes/
