@@ -20,7 +20,7 @@ const gh = new GithubApi({
 
 const buildDigest = prGroups =>
   flatMap(prGroups, (prs, repo) => {
-    const groupTitle = `---*--- *<https://github.com/${org}/${repo}|${repo}>}* ---*---`
+    const groupTitle = `---*--- *<https://github.com/${owner}/${repo}|${repo}>}* ---*---`
 
     const details = map(prs, pr =>
       gh.issues
