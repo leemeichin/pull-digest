@@ -2,7 +2,7 @@ const botBuilder = require('claudia-bot-builder')
 const slackTemplate = botBuilder.slackTemplate
 
 const GithubApi = require('github')
-const groupby = require('lodash.groupby')
+const groupBy = require('lodash.groupby')
 const flatMap = require('lodash.flatmap')
 
 const {
@@ -17,8 +17,8 @@ const gh = new GithubApi({
   }
 })
 
-const buildDigest = prs =>
-  flatMap(groupedPrs, (prs, repo) => {
+const buildDigest = prGroups =>
+  flatMap(prGroups, (prs, repo) => {
     const groupTitle = `---*--- *<https://github.com/${org}/${repo}|${repo}>}* ---*---`
 
     const details = prs.map(pr =>
@@ -31,8 +31,9 @@ const buildDigest = prs =>
     return Promise.all([Promise.resolve(groupTitle), ...details])
   })
 
-const renderTemplate = (title, digest) =>
+const renderTemplate = (title, digest) => {
   new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
+}
 
 module.exports = botBuilder((req, ctx) => {
   gh.authenticate({ type: 'token', token })
@@ -40,7 +41,7 @@ module.exports = botBuilder((req, ctx) => {
   const title =
     ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot'
 
-  const allPrs = Promise.all(
+  return Promise.all(
     repos.split(' ').map(repo =>
       gh.pullRequests.getAll({
         owner,
