@@ -26,7 +26,6 @@ const buildDigest = prGroups =>
       const details = map(prs, pr =>
         gh.issues
           .getIssueLabels({ owner, repo, number: pr.number })
-          .then(res => console.log(res) || res)
           .then(res => res.data)
           .then(labels => labels.map(label => label.name))
           .then(
