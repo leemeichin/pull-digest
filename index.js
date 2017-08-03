@@ -30,8 +30,6 @@ const buildDigest = prGroups =>
         .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
     )
 
-    console.log(details, prs)
-
     return Promise.all([Promise.resolve(groupTitle), ...details])
   })
 
@@ -54,7 +52,7 @@ module.exports = botBuilder((req, ctx) => {
       })
     )
   )
-    .then(res => map(res, 'data'))
+    .then(results => flatMap(results, 'data'))
     .then(prs => groupBy(prs, pr => pr.repo.name))
     .then(prs => buildDigest(prs))
     .then(digest => renderTemplate(title, digest))
