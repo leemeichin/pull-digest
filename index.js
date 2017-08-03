@@ -23,7 +23,7 @@ const gh = new GithubApi({
 const buildDigest = prGroups =>
   Promise.all(
     flatMap(prGroups, (prs, repo) => {
-      const groupTitle = `:mag_right: *${repo} (<https://github.com/${owner}/${repo}|${owner}/${repo}>)*\n--------`
+      const groupTitle = `:bell: *${repo} (<https://github.com/${owner}/${repo}|${owner}/${repo}>)*\n--------`
 
       const details = map(prs, pr =>
         gh.issues
