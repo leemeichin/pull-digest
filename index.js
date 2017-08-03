@@ -27,13 +27,8 @@ const buildDigest = prGroups =>
         gh.issues
           .getIssueLabels({ owner, repo, number: pr.number })
           .then(res => res.data)
-          .then(labels => labels.map(label => label.name))
-          .then(
-            labels =>
-              `<${pr.html_url}|${pr.title}> ${labels
-                .map(label => `[${label}]`)
-                .join(', ')}`
-          )
+          .then(labels => labels.map(label => `[${label.name}]`))
+          .then(labels => `<${pr.html_url}|${pr.title}> ${labels.join(', ')}`)
       )
       return [Promise.resolve(groupTitle), ...details, Promise.resolve('\n')]
     })
