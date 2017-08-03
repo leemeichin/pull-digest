@@ -21,7 +21,7 @@ const gh = new GithubApi({
 const buildDigest = prGroups =>
   Promise.all(
     flatMap(prGroups, (prs, repo) => {
-      const groupTitle = `---*--- *<https://github.com/${owner}/${repo}|${repo}>}* ---*---`
+      const groupTitle = `*<https://github.com/${owner}/${repo}|${repo}>*\n--------`
 
       const details = map(prs, pr =>
         gh.issues
@@ -29,9 +29,14 @@ const buildDigest = prGroups =>
           .then(res => console.log(res) || res)
           .then(res => res.data)
           .then(labels => labels.map(label => label.name))
-          .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
+          .then(
+            labels =>
+              `<${pr.html_url}|${pr.title}> ${labels
+                .map(label => `[${label}]`)
+                .join(', ')}`
+          )
       )
-      return [Promise.resolve(groupTitle), ...details]
+      return [Promise.resolve(groupTitle), ...details, Promise.resolve('\n')]
     })
   )
 
