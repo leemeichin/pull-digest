@@ -30,6 +30,7 @@ const buildDigest = prGroups =>
           .then(labels => labels.map(label => `[${label.name}]`))
           .then(labels => `<${pr.html_url}|${pr.title}> ${labels.join(', ')}`)
       )
+
       return [Promise.resolve(groupTitle), ...details, Promise.resolve('\n')]
     })
   )
