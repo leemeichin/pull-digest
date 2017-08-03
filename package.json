@@ -1,22 +1,21 @@
 {
   "name": "pull-digest",
   "version": "1.0.0",
-  "main": "lib/index.js",
+  "main": "index.js",
   "author": "Lee Machin <me@mrl.ee>",
   "license": "MIT",
   "files": [
-    "lib/",
     "_index.js"
   ],
   "scripts": {
     "build": "babel index.js > _index.js",
     "create": "yarn build && claudia create --profile claudia --api-module _index",
-    "update": "yarn build && claudia update --profile claudia",
+    "update": "yarn build && claudia update --profile claudia --cache-api-config",
     "configure": "claudia update --profile claudia --configure-slack-slash-command"
   },
   "dependencies": {
     "aws-sdk": "^2.6.14",
-    "babel-polyfill": "^6.23.0",
+    "babel-runtime": "^6.25.0",
     "claudia-bot-builder": "^2.4.0",
     "github": "^9.1.0",
     "lodash.flatmap": "^4.5.0",
@@ -24,6 +23,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.23.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.0",
     "claudia": "^2.1.1"
   }

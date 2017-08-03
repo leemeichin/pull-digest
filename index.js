@@ -1,6 +1,5 @@
-import 'babel-polyfill'
 import botBuilder, { slackTemplate } from 'claudia-bot-builder'
-import GitHubApi from 'github'
+import GithubApi from 'github'
 import groupby from 'lodash.groupby'
 import flatMap from 'lodash.flatMap'
 
@@ -10,7 +9,7 @@ const {
   GITHUB_REPOS: repos
 } = process.env
 
-const gh = new GitHubApi({
+const gh = new GithubApi({
   headers: {
     'User-Agent': 'leemachin/pull-digest'
   }
