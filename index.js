@@ -23,7 +23,7 @@ const buildDigest = prGroups =>
 
     const details = prs.map(pr =>
       gh.issues
-        .get({ owner, issue, number: pr.id })
+        .get({ owner, repo, number: pr.id })
         .then(issue => issue.labels.map(label => label.name))
         .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
     )
