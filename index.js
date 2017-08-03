@@ -44,7 +44,7 @@ module.exports = botBuilder((req, ctx) => {
   gh.authenticate({ type: 'token', token })
 
   const title =
-    ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot:'
+    ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot:\n'
 
   return Promise.all(
     map(repos.split(' '), repo =>
