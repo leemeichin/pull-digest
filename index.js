@@ -3,7 +3,7 @@ const slackTemplate = botBuilder.slackTemplate
 
 const GithubApi = require('github')
 const groupby = require('lodash.groupby')
-const flatMap = require('lodash.flatMap')
+const flatMap = require('lodash.flatmap')
 
 const {
   GITHUB_TOKEN: token,
