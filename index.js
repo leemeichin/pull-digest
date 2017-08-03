@@ -31,9 +31,8 @@ const buildDigest = prGroups =>
     return Promise.all([Promise.resolve(groupTitle), ...details])
   })
 
-const renderTemplate = (title, digest) => {
+const renderTemplate = (title, digest) =>
   new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
-}
 
 module.exports = botBuilder((req, ctx) => {
   gh.authenticate({ type: 'token', token })
@@ -51,6 +50,7 @@ module.exports = botBuilder((req, ctx) => {
       })
     )
   )
+    .then(res => res.data)
     .then(prs => groupBy(prs, pr => pr.repo.name))
     .then(prs => buildDigest(prs))
     .then(digest => renderTemplate(title, digest))
