@@ -6,6 +6,9 @@ const groupBy = require('lodash.groupby')
 const flatMap = require('lodash.flatmap')
 const map = require('lodash.map')
 
+const title =
+  ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot:\n\n'
+
 const {
   GITHUB_TOKEN: token,
   GITHUB_ORG: owner,
@@ -38,14 +41,11 @@ const buildDigest = prGroups =>
     })
   )
 
-const renderTemplate = (title, digest) =>
+const renderTemplate = digest =>
   new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
 
 module.exports = botBuilder((_req, _ctx) => {
   gh.authenticate({ type: 'token', token })
-
-  const title =
-    ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot:\n\n'
 
   return Promise.all(
     map(repos.split(' '), repo =>
@@ -55,5 +55,5 @@ module.exports = botBuilder((_req, _ctx) => {
     .then(results => flatMap(results, 'data'))
     .then(prs => groupBy(prs, pr => pr.head.repo.name))
     .then(prs => buildDigest(prs))
-    .then(digest => renderTemplate(title, digest))
+    .then(digest => renderTemplate(digest))
 })
