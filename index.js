@@ -41,7 +41,7 @@ const buildDigest = prGroups =>
 const renderTemplate = (title, digest) =>
   new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
 
-module.exports = botBuilder((req, ctx) => {
+module.exports = botBuilder((_req, _ctx) => {
   gh.authenticate({ type: 'token', token })
 
   const title =
