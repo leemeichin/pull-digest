@@ -10,7 +10,8 @@ const {
   GITHUB_TOKEN: token,
   GITHUB_ORG: owner,
   GITHUB_REPOS: repos,
-  PR_SORT_ORDER: sort = 'updated',
+  PR_SORT_BY: sort = 'updated',
+  PR_SORT_DIRECTION: direction = 'desc',
   PR_STATE: state = 'open'
 } = process.env
 
@@ -23,7 +24,7 @@ const gh = new GithubApi({
 const buildDigest = prGroups =>
   Promise.all(
     flatMap(prGroups, (prs, repo) => {
-      const groupTitle = `:bell: *${repo} (<https://github.com/${owner}/${repo}|${owner}/${repo}>)*\n--------`
+      const groupTitle = `:bell:\t\t*${repo} (<https://github.com/${owner}/${repo}|${owner}/${repo}>)*\n--------`
 
       const details = map(prs, pr =>
         gh.issues
@@ -48,7 +49,7 @@ module.exports = botBuilder((req, ctx) => {
 
   return Promise.all(
     map(repos.split(' '), repo =>
-      gh.pullRequests.getAll({ owner, repo, state, sort })
+      gh.pullRequests.getAll({ owner, repo, state, sort, direction })
     )
   )
     .then(results => flatMap(results, 'data'))
