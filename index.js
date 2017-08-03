@@ -54,6 +54,6 @@ module.exports = botBuilder((_req, _ctx) => {
   )
     .then(results => flatMap(results, 'data'))
     .then(prs => groupBy(prs, pr => pr.head.repo.name))
-    .then(prs => buildDigest(prs))
-    .then(digest => renderTemplate(digest))
+    .then(buildDigest)
+    .then(renderTemplate)
 })
