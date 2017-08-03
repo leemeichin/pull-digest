@@ -4,6 +4,7 @@ const slackTemplate = botBuilder.slackTemplate
 const GithubApi = require('github')
 const groupBy = require('lodash.groupby')
 const flatMap = require('lodash.flatmap')
+const map = require('lodash.map')
 
 const {
   GITHUB_TOKEN: token,
@@ -21,12 +22,15 @@ const buildDigest = prGroups =>
   flatMap(prGroups, (prs, repo) => {
     const groupTitle = `---*--- *<https://github.com/${org}/${repo}|${repo}>}* ---*---`
 
-    const details = prs.map(pr =>
+    const details = map(prs, pr =>
       gh.issues
         .get({ owner, repo, number: pr.id })
+        .then(res => res.data)
         .then(issue => issue.labels.map(label => label.name))
         .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
     )
+
+    console.log(details, prs)
 
     return Promise.all([Promise.resolve(groupTitle), ...details])
   })
@@ -38,10 +42,10 @@ module.exports = botBuilder((req, ctx) => {
   gh.authenticate({ type: 'token', token })
 
   const title =
-    ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot'
+    ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot:'
 
   return Promise.all(
-    repos.split(' ').map(repo =>
+    map(repos.split(' '), repo =>
       gh.pullRequests.getAll({
         owner,
         repo,
@@ -50,7 +54,7 @@ module.exports = botBuilder((req, ctx) => {
       })
     )
   )
-    .then(res => res.data)
+    .then(res => map(res, 'data'))
     .then(prs => groupBy(prs, pr => pr.repo.name))
     .then(prs => buildDigest(prs))
     .then(digest => renderTemplate(title, digest))
