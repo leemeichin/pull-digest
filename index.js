@@ -1,7 +1,9 @@
-import botBuilder, { slackTemplate } from 'claudia-bot-builder'
-import GithubApi from 'github'
-import groupby from 'lodash.groupby'
-import flatMap from 'lodash.flatMap'
+const botBuilder = require('claudia-bot-builder')
+const slackTemplate = botBuilder.slackTemplate
+
+const GithubApi = require('github')
+const groupby = require('lodash.groupby')
+const flatMap = require('lodash.flatMap')
 
 const {
   GITHUB_TOKEN: token,
@@ -15,40 +17,40 @@ const gh = new GithubApi({
   }
 })
 
-module.exports = botBuilder(async (req, ctx) => {
-  gh.authenticate({ type: 'token', token })
+const buildDigest = prs =>
+  flatMap(groupedPrs, (prs, repo) => {
+    const groupTitle = `---*--- *<https://github.com/${org}/${repo}|${repo}>}* ---*---`
 
-  const allPrs = await Promise.all(
-    repos.split(' ').map(
-      async repo =>
-        await gh.pullRequests.getAll({
-          owner,
-          repo,
-          state: 'open',
-          sort: 'updated'
-        })
+    const details = prs.map(pr =>
+      gh.issues
+        .get({ owner, issue, number: pr.id })
+        .then(issue => issue.labels.map(label => label.name))
+        .then(labels => `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`)
     )
-  )
 
-  const groupedPrs = groupBy(allPrs, pr => pr.repo.name)
+    return Promise.all([Promise.resolve(groupTitle), ...details])
+  })
+
+const renderTemplate = (title, digest) =>
+  new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
+
+module.exports = botBuilder((req, ctx) => {
+  gh.authenticate({ type: 'token', token })
 
   const title =
     ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot'
 
-  const digest = flatMap(groupedPrs, (prs, repo) => {
-    const groupTitle = `---*--- *<https://github.com/${org}/${repo}|${repo}>}* ---*---`
-
-    const details = prs.map(async pr => {
-      const issue = await gh.issues.get({ owner, issue, number: pr.id })
-      const labels = issue.labels.map(label => label.name)
-
-      return `<${pr.html_url}|${pr.title}> (${labels.join(', ')})`
-    })
-
-    return [groupTitle, ...details]
-  })
-
-  return new slackTemplate([title, ...digest].join('\n'))
-    .channelMessage(true)
-    .get()
+  const allPrs = Promise.all(
+    repos.split(' ').map(repo =>
+      gh.pullRequests.getAll({
+        owner,
+        repo,
+        state: 'open',
+        sort: 'updated'
+      })
+    )
+  )
+    .then(prs => groupBy(prs, pr => pr.repo.name))
+    .then(prs => buildDigest(prs))
+    .then(digest => renderTemplate(title, digest))
 })
