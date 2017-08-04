@@ -35,7 +35,7 @@ const transformLabels = ({ status, labels }) => ({
 })
 
 const renderLine = (pr, filter) => ({ status, labels }) =>
-  filter && !labels
+  filter && (labels.length == 0 || labels.every(label => label !== filter))
     ? null
     : `<${pr.html_url}|${pr.title}> ${labels.join(', ')} (build: ${status})`
 
