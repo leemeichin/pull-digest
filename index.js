@@ -29,9 +29,9 @@ const getIssuesAndStatuses = ([{ data: issues }, { data: statuses }]) => ({
   statuses
 })
 
-const getCombinedStatusAndFilterIssues = ({ issues, statuses }) => ({
+const getCombinedStatusAndFilterIssues = filter => ({ issues, statuses }) => ({
   status: statuses.status,
-  labels: issues.filter(label => label.name === filter)
+  labels: filter ? issues.filter(label => label.name === filter) : issues
 })
 
 const transformLabels = ({ status, labels }) => ({
@@ -53,7 +53,7 @@ const buildDigest = filter => prGroups =>
           gh.repos.getCombinedStatus({ owner, repo, ref: pr.head.sha })
         ])
           .then(getIssuesAndStatuses)
-          .then(getCombinedStatusAndFilterIssues)
+          .then(getCombinedStatusAndFilterIssues(filter))
           .then(transformLabels)
           .then(renderLine)
       )
