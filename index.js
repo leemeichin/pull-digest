@@ -24,16 +24,9 @@ const gh = new GithubApi({
   }
 })
 
-const getIssuesAndStatuses = ([{ data: issues }, { data: statuses }]) => ({
-  issues,
-  statuses
-})
-
-const getCombinedStatusAndFilterIssues = filter => ({ issues, statuses }) => ({
-  status: statuses.state,
-  labels: filter
-    ? issues.filter(label => label.name && label.name.toLowerCase() === filter)
-    : issues
+const getLabelsAndStatuses = ([{ data: labels }, { data: statuses }]) => ({
+  labels,
+  status: statuses.state
 })
 
 const transformLabels = ({ status, labels }) => ({
@@ -41,8 +34,10 @@ const transformLabels = ({ status, labels }) => ({
   labels: map(labels, label => `[${label.name}]`)
 })
 
-const renderLine = pr => ({ status, labels }) =>
-  `<${pr.html_url}|${pr.title}> ${labels.join(', ')} (build: ${status})`
+const renderLine = (pr, filter) => ({ status, labels }) =>
+  filter && !labels
+    ? null
+    : `<${pr.html_url}|${pr.title}> ${labels.join(', ')} (build: ${status})`
 
 const buildDigest = filter => prGroups =>
   Promise.all(
@@ -54,18 +49,21 @@ const buildDigest = filter => prGroups =>
           gh.issues.getIssueLabels({ owner, repo, number: pr.number }),
           gh.repos.getCombinedStatus({ owner, repo, ref: pr.head.sha })
         ])
-          .then(getIssuesAndStatuses)
-          .then(getCombinedStatusAndFilterIssues(filter))
+          .then(getLabelsAndStatuses)
           .then(transformLabels)
-          .then(renderLine(pr))
+          .then(renderLine(pr, filter))
       )
 
       return [Promise.resolve(groupTitle), ...details, Promise.resolve('\n')]
     })
   )
 
-const renderTemplate = digest =>
-  new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
+const filterEmptyLines = digest => digest.filter(line => !!line)
+
+const renderTemplate = title => digest =>
+  new slackTemplate([title, ...digest].filter(line => line).join('\n'))
+    .channelMessage(true)
+    .get()
 
 module.exports = botBuilder((req, _ctx) => {
   gh.authenticate({ type: 'token', token })
@@ -80,5 +78,6 @@ module.exports = botBuilder((req, _ctx) => {
     .then(results => flatMap(results, 'data'))
     .then(prs => groupBy(prs, pr => pr.head.repo.name))
     .then(buildDigest(filter))
-    .then(renderTemplate)
+    .then(filterEmptyLines)
+    .then(renderTemplate(title))
 })
