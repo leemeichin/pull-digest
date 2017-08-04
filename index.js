@@ -50,7 +50,7 @@ const buildDigest = filter => prGroups =>
       const details = map(prs, pr =>
         Promise.all([
           gh.issues.getIssueLabels({ owner, repo, number: pr.number }),
-          gh.statuses.getCombinedStatus({ owner, repo, ref: pr.head.sha })
+          gh.repos.getCombinedStatus({ owner, repo, ref: pr.head.sha })
         ])
           .then(getIssuesAndStatuses)
           .then(getCombinedStatusAndFilterIssues)
