@@ -30,8 +30,10 @@ const getIssuesAndStatuses = ([{ data: issues }, { data: statuses }]) => ({
 })
 
 const getCombinedStatusAndFilterIssues = filter => ({ issues, statuses }) => ({
-  status: statuses.status,
-  labels: filter ? issues.filter(label => label.name === filter) : issues
+  status: statuses.state,
+  labels: filter
+    ? issues.filter(label => label.name && label.name.toLowerCase() === filter)
+    : issues
 })
 
 const transformLabels = ({ status, labels }) => ({
@@ -68,7 +70,7 @@ const renderTemplate = digest =>
 module.exports = botBuilder((req, _ctx) => {
   gh.authenticate({ type: 'token', token })
 
-  const filter = req.text
+  const filter = req.text.toLowerCase()
 
   return Promise.all(
     map(repos.split(' '), repo =>
