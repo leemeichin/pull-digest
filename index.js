@@ -7,7 +7,7 @@ const flatMap = require('lodash.flatmap')
 const map = require('lodash.map')
 
 const title =
-  ':party_parrot: :party_parrot: :party_parrot: *PR DIGEST* :party_parrot: :party_parrot: :party_parrot:\n\n'
+  ':mag_right: :mag_right: :mag_right: *PR DIGEST* :mag: :mag: :mag:\n\n'
 
 const {
   GITHUB_TOKEN: token,
