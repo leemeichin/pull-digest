@@ -39,7 +39,7 @@ const transformLabels = ({ status, labels }) => ({
   labels: map(labels, label => `[${label.name}]`)
 })
 
-const renderLine = ({ status, labels }) =>
+const renderLine = pr => ({ status, labels }) =>
   `<${pr.html_url}|${pr.title}> ${labels.join(', ')} (build: ${status})`
 
 const buildDigest = filter => prGroups =>
@@ -55,7 +55,7 @@ const buildDigest = filter => prGroups =>
           .then(getIssuesAndStatuses)
           .then(getCombinedStatusAndFilterIssues(filter))
           .then(transformLabels)
-          .then(renderLine)
+          .then(renderLine(pr))
       )
 
       return [Promise.resolve(groupTitle), ...details, Promise.resolve('\n')]
