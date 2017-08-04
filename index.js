@@ -24,7 +24,7 @@ const gh = new GithubApi({
   }
 })
 
-const buildDigest = prGroups =>
+const buildDigest = filter => prGroups =>
   Promise.all(
     flatMap(prGroups, (prs, repo) => {
       const groupTitle = `:bell:\t*${repo} (<https://github.com/${owner}/${repo}|${owner}/${repo}>)*\n--------`
@@ -33,6 +33,7 @@ const buildDigest = prGroups =>
         gh.issues
           .getIssueLabels({ owner, repo, number: pr.number })
           .then(res => res.data)
+          .then(labels => labels.filter(label => label.name === filter))
           .then(labels => map(labels, label => `[${label.name}]`))
           .then(labels => `<${pr.html_url}|${pr.title}> ${labels.join(', ')}`)
       )
@@ -44,8 +45,10 @@ const buildDigest = prGroups =>
 const renderTemplate = digest =>
   new slackTemplate([title, ...digest].join('\n')).channelMessage(true).get()
 
-module.exports = botBuilder((_req, _ctx) => {
+module.exports = botBuilder((req, _ctx) => {
   gh.authenticate({ type: 'token', token })
+
+  const filter = req.text
 
   return Promise.all(
     map(repos.split(' '), repo =>
@@ -54,6 +57,6 @@ module.exports = botBuilder((_req, _ctx) => {
   )
     .then(results => flatMap(results, 'data'))
     .then(prs => groupBy(prs, pr => pr.head.repo.name))
-    .then(buildDigest)
+    .then(buildDigest(filter))
     .then(renderTemplate)
 })
