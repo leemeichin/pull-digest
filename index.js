@@ -24,18 +24,38 @@ const gh = new GithubApi({
   }
 })
 
+const getIssuesAndStatuses = ([{ data: issues }, { data: statuses }]) => ({
+  issues,
+  statuses
+})
+
+const getCombinedStatusAndFilterIssues = ({ issues, statuses }) => ({
+  status: statuses.status,
+  labels: issues.filter(label => label.name === filter)
+})
+
+const transformLabels = ({ status, labels }) => ({
+  status,
+  labels: map(labels, label => `[${label.name}]`)
+})
+
+const renderLine = ({ status, labels }) =>
+  `<${pr.html_url}|${pr.title}> ${labels.join(', ')} (build: ${status})`
+
 const buildDigest = filter => prGroups =>
   Promise.all(
     flatMap(prGroups, (prs, repo) => {
       const groupTitle = `:bell:\t*${repo} (<https://github.com/${owner}/${repo}|${owner}/${repo}>)*\n--------`
 
       const details = map(prs, pr =>
-        gh.issues
-          .getIssueLabels({ owner, repo, number: pr.number })
-          .then(res => res.data)
-          .then(labels => labels.filter(label => label.name === filter))
-          .then(labels => map(labels, label => `[${label.name}]`))
-          .then(labels => `<${pr.html_url}|${pr.title}> ${labels.join(', ')}`)
+        Promise.all([
+          gh.issues.getIssueLabels({ owner, repo, number: pr.number }),
+          gh.statuses.getCombinedStatus({ owner, repo, ref: pr.head.sha })
+        ])
+          .then(getIssuesAndStatuses)
+          .then(getCombinedStatusAndFilterIssues)
+          .then(transformLabels)
+          .then(renderLine)
       )
 
       return [Promise.resolve(groupTitle), ...details, Promise.resolve('\n')]
