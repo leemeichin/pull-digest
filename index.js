@@ -33,7 +33,7 @@ const transformLabels = ({ status, labels }) => ({
   status,
   labels: map(
     labels,
-    label => `:${label.name.toLowerCase().replace(' ', '_')}:`
+    label => `:${label.name.toLowerCase().replace(/ /g, '_')}:`
   )
 })
 
@@ -72,7 +72,7 @@ const renderTemplate = title => digest =>
 module.exports = botBuilder((req, _ctx) => {
   gh.authenticate({ type: 'token', token })
 
-  const filter = req.text.toLowerCase().replace(' ', '_')
+  const filter = req.text.toLowerCase().replace(/ /g, '_')
 
   return Promise.all(
     map(repos.split(' '), repo =>
