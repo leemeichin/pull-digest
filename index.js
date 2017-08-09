@@ -31,11 +31,12 @@ const getLabelsAndStatuses = ([{ data: labels }, { data: statuses }]) => ({
 
 const transformLabels = ({ status, labels }) => ({
   status,
-  labels: map(labels, label => `[${label.name}]`)
+  labels: map(labels, label => `[${label.name.toLowerCase()}]`)
 })
 
 const renderLine = (pr, filter) => ({ status, labels }) =>
-  filter && (labels.length == 0 || labels.some(label => label !== filter))
+  filter &&
+  (labels.length == 0 || labels.every(label => `[${filter}]` !== label))
     ? null
     : `<${pr.html_url}|${pr.title}> ${labels.join(', ')} (build: ${status})`
 
@@ -69,6 +70,7 @@ module.exports = botBuilder((req, _ctx) => {
   gh.authenticate({ type: 'token', token })
 
   const filter = req.text.toLowerCase()
+  console.log(filter)
 
   return Promise.all(
     map(repos.split(' '), repo =>
