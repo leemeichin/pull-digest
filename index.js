@@ -1,10 +1,16 @@
 const botBuilder = require('claudia-bot-builder')
 const slackTemplate = botBuilder.slackTemplate
 
-const GithubApi = require('github')
+const githubClient = require('github-graphql-client')
 const groupBy = require('lodash.groupby')
 const flatMap = require('lodash.flatmap')
 const map = require('lodash.map')
+const filter = require('lodash.filter')
+
+const makeGithubRequest = req =>
+  new Promise((resolve, reject) =>
+    githubClient(req, (err, res) => (err ? reject(err) : resolve(res)))
+  )
 
 const title =
   ':mag_right: :mag_right: :mag_right: *PR DIGEST* :mag: :mag: :mag:\n\n'
@@ -17,17 +23,6 @@ const {
   PR_SORT_DIRECTION: direction = 'desc',
   PR_STATE: state = 'open'
 } = process.env
-
-const gh = new GithubApi({
-  headers: {
-    'User-Agent': 'leemachin/pull-digest'
-  }
-})
-
-const getLabelsAndStatuses = ([{ data: labels }, { data: statuses }]) => ({
-  labels,
-  status: statuses.state
-})
 
 const transformLabels = ({ status, labels }) => ({
   status,
@@ -62,26 +57,71 @@ const buildDigest = filter => prGroups =>
     })
   )
 
-const filterEmptyLines = digest => digest.filter(line => !!line)
-
 const renderTemplate = title => digest =>
   new slackTemplate([title, ...digest].filter(line => line).join('\n'))
     .channelMessage(true)
     .get()
 
+const getDataFromNodes = results => results.data.repository.pullRequests.nodes
+
+const filterPrsWithLabel = filterLabel => prs =>
+  filter
+    ? filter(prs, pr =>
+        map(pr.labels.nodes, label => label.name.toLowerCase()).includes(
+          filterLabel
+        )
+      )
+    : prs
+
+const transformData = prs => map(prs, pr => (
+  title: pr.title,
+  url: pr.url,
+  labels: map(pr.labels.nodes, label => `:${label.toLowerCase().replace(/ /g, '_')}:`),
+  assignees: map(pr.assignees.nodes, 'name'),
+  status: pr.commits.nodes.commit.status.state
+})
+
+const query = `{
+  repository(owner: "${owner}", name: "${name}") {
+    pullRequests(first: 30, states: [OPEN]) {
+      nodes {
+        title
+        url
+
+        labels(first: 3) {
+          nodes {
+            name
+            color
+          }
+        }
+
+        assignees(first: 5) {
+          nodes {
+            name
+          }
+        }
+
+      	commits(last: 1) {
+          nodes {
+          	commit {
+              status {
+                state
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}`
+
 module.exports = botBuilder((req, _ctx) => {
-  gh.authenticate({ type: 'token', token })
+  const filterLabel = req.text.toLowerCase()
 
-  const filter = req.text.toLowerCase().replace(/ /g, '_')
-
-  return Promise.all(
-    map(repos.split(' '), repo =>
-      gh.pullRequests.getAll({ owner, repo, state, sort, direction })
-    )
-  )
-    .then(results => flatMap(results, 'data'))
-    .then(prs => groupBy(prs, pr => pr.head.repo.name))
-    .then(buildDigest(filter))
-    .then(filterEmptyLines)
-    .then(renderTemplate(title))
+  makeGithubRequest({ token, query })
+    .then(getDataFromNodes)
+    .then(filterPrsWithLabel(filterLabel))
+    .then(transformData)
+    .then(groupPrsByRepo)
+    .then(renderTemplate)
 })

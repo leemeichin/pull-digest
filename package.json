@@ -18,6 +18,8 @@
     "claudia": "^2.14.2",
     "claudia-bot-builder": "^2.15.0",
     "github": "^9.1.0",
+    "github-graphql-client": "^1.0.0",
+    "lodash.filter": "^4.6.0",
     "lodash.flatmap": "^4.5.0",
     "lodash.groupby": "^4.6.0",
     "lodash.map": "^4.6.0"
