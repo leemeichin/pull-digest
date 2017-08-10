@@ -28,7 +28,7 @@ const getDataFromNodes = results =>
   flatMap(results, 'data.repository.pullRequests.nodes')
 
 const filterPrsWithLabel = filterLabel => prs =>
-  filter
+  filterLabel
     ? filter(prs, pr =>
         map(pr.labels.nodes, label => label.name.toLowerCase()).includes(
           filterLabel
