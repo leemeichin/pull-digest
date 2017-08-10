@@ -2,6 +2,7 @@ const botBuilder = require('claudia-bot-builder')
 const slackTemplate = botBuilder.slackTemplate
 
 const githubClient = require('github-graphql-client')
+const groupBy = require('lodash.groupby')
 const flatMap = require('lodash.flatmap')
 const map = require('lodash.map')
 const filter = require('lodash.filter')
@@ -41,6 +42,7 @@ const transformData = prs =>
     title: pr.title,
     url: pr.url,
     author: pr.author.login,
+    repoName: pr.repository.nameWithOwner,
     labels: map(pr.labels.nodes, label => ({
       name: `:${label.name.toLowerCase().replace(/ /g, '_')}:`,
       color: label.color
@@ -51,9 +53,12 @@ const transformData = prs =>
   }))
 
 const renderAttachment = message => pr => {
-  message.addAttachment().addTitle(pr.title).addAuthor(pr.author)
+  message
+    .addAttachment()
+    .addTitle(pr.title)
+    .addAuthor(`${pr.repoName} (${pr.author})`)
 
-  if (pr.labels) {
+  if (pr.labels.length > 0) {
     message.addColor(pr.labels[0].color)
   }
 
@@ -78,6 +83,10 @@ const query = (owner, name) => `{
         title
         url
         mergeable
+
+        repository {
+          nameWithOwner
+        }
 
         author {
           login
