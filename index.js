@@ -43,7 +43,7 @@ const transformData = prs =>
     author: pr.author.login,
     labels: map(
       pr.labels.nodes,
-      label => `:${label.toLowerCase().replace(/ /g, '_')}:`
+      label => `:${label.name.toLowerCase().replace(/ /g, '_')}:`
     ),
     assignees: map(pr.assignees.nodes, 'name'),
     status: pr.commits.nodes.commit.status.state,
