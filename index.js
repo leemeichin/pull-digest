@@ -67,6 +67,7 @@ const renderMessage = owner => prs => {
 
   each(prs, pr => (message = renderAttachment(message)(pr)))
 
+  console.log(prs, message)
   return message.get()
 }
 
@@ -109,16 +110,14 @@ const query = (owner, name) => `{
   }
 }`
 
-module.exports = botBuilder((req, _ctx) => {
-  const filterLabel = req.text.toLowerCase()
-
+module.exports = botBuilder((req, _ctx) =>
   Promise.all(
     map(repos.split(' '), repo =>
       makeGithubRequest({ token, query: query(owner, repo) })
     )
   )
     .then(getDataFromNodes)
-    .then(filterPrsWithLabel(filterLabel))
+    .then(filterPrsWithLabel(req.text.toLowerCase()))
     .then(transformData)
     .then(renderMessage)
-})
+)
