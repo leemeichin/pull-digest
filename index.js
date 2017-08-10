@@ -119,5 +119,5 @@ module.exports = botBuilder((req, _ctx) =>
     .then(getDataFromNodes)
     .then(filterPrsWithLabel(req.text.toLowerCase()))
     .then(transformData)
-    .then(renderMessage)
+    .then(renderMessage(owner))
 )
