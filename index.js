@@ -41,12 +41,12 @@ const transformData = prs =>
     title: pr.title,
     url: pr.url,
     author: pr.author.login,
-    labels: map(
-      pr.labels.nodes,
-      label => `:${label.name.toLowerCase().replace(/ /g, '_')}:`
-    ),
+    labels: map(pr.labels.nodes, label => ({
+      name: `:${label.name.toLowerCase().replace(/ /g, '_')}:`,
+      color: label.color
+    })),
     assignees: map(pr.assignees.nodes, 'name'),
-    status: pr.commits.nodes.commit.status.state,
+    status: pr.commits.nodes[0].commit.status.state,
     mergeable: pr.mergeable
   }))
 
