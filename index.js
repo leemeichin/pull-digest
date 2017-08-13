@@ -1,32 +1,29 @@
-const botBuilder = require('claudia-bot-builder')
-const slackTemplate = botBuilder.slackTemplate
+const botBuilder = require("claudia-bot-builder");
+const slackTemplate = botBuilder.slackTemplate;
 
-const githubClient = require('github-graphql-client')
-const groupBy = require('lodash.groupby')
-const flatMap = require('lodash.flatmap')
-const map = require('lodash.map')
-const filter = require('lodash.filter')
-const each = require('lodash.foreach')
+const githubClient = require("github-graphql-client");
+const groupBy = require("lodash.groupby");
+const flatMap = require("lodash.flatmap");
+const map = require("lodash.map");
+const filter = require("lodash.filter");
+const each = require("lodash.foreach");
 
 const makeGithubRequest = req =>
   new Promise((resolve, reject) =>
     githubClient(req, (err, res) => (err ? reject(err) : resolve(res)))
-  )
-
-const title =
-  ':mag_right: :mag_right: :mag_right: *PR DIGEST* :mag: :mag: :mag:\n\n'
+  );
 
 const {
   GITHUB_TOKEN: token,
   GITHUB_ORG: owner,
   GITHUB_REPOS: repos,
-  PR_SORT_BY: sort = 'updated',
-  PR_SORT_DIRECTION: direction = 'desc',
-  PR_STATE: state = 'open'
-} = process.env
+  PR_SORT_BY: sort = "updated",
+  PR_SORT_DIRECTION: direction = "desc",
+  PR_STATE: state = "open"
+} = process.env;
 
 const getDataFromNodes = results =>
-  flatMap(results, 'data.repository.pullRequests.nodes')
+  flatMap(results, "data.repository.pullRequests.nodes");
 
 const filterPrsWithLabel = filterLabel => prs =>
   filterLabel
@@ -35,7 +32,7 @@ const filterPrsWithLabel = filterLabel => prs =>
           filterLabel
         )
       )
-    : prs
+    : prs;
 
 const transformData = prs =>
   map(prs, pr => ({
@@ -44,37 +41,38 @@ const transformData = prs =>
     author: pr.author.login,
     repoName: pr.repository.nameWithOwner,
     labels: map(pr.labels.nodes, label => ({
-      name: `:${label.name.toLowerCase().replace(/ /g, '_')}:`,
+      name: `:${label.name.toLowerCase().replace(/ /g, "_")}:`,
       color: label.color
     })),
-    assignees: map(pr.assignees.nodes, 'name'),
+    assignees: map(pr.assignees.nodes, "name"),
     status: pr.commits.nodes[0].commit.status.state,
     mergeable: pr.mergeable
-  }))
+  }));
 
 const renderAttachment = message => pr => {
   message
     .addAttachment()
-    .addTitle(pr.title)
-    .addAuthor(`${pr.repoName} (${pr.author})`)
+    .addTitle(`<${pr.title}|${pr.url}>`)
+    .addAuthor(`${pr.repoName} (${pr.author})`);
 
   if (pr.labels.length > 0) {
-    message.addColor(pr.labels[0].color)
+    message.addColor(pr.labels[0].color);
   }
 
-  return message
-}
+  return message;
+};
 
 const renderMessage = owner => prs => {
-  let message = new slackTemplate(`Recently in ${owner}...`)
+  let message = new slackTemplate(`Recently in ${owner}...`);
 
-  message.channelMessage(true)
+  message.channelMessage(true);
 
-  each(prs, pr => (message = renderAttachment(message)(pr)))
+  each(prs, pr => {
+    message = renderAttachment(message)(pr);
+  });
 
-  console.log(prs, message)
-  return message.get()
-}
+  return message.get();
+};
 
 const query = (owner, name) => `{
   repository(owner: "${owner}", name: "${name}") {
@@ -117,11 +115,11 @@ const query = (owner, name) => `{
       }
     }
   }
-}`
+}`;
 
 module.exports = botBuilder((req, _ctx) =>
   Promise.all(
-    map(repos.split(' '), repo =>
+    map(repos.split(" "), repo =>
       makeGithubRequest({ token, query: query(owner, repo) })
     )
   )
@@ -129,4 +127,4 @@ module.exports = botBuilder((req, _ctx) =>
     .then(filterPrsWithLabel(req.text.toLowerCase()))
     .then(transformData)
     .then(renderMessage(owner))
-)
+);
