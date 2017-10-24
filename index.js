@@ -38,7 +38,7 @@ const transformData = prs =>
   map(prs, pr => ({
     title: pr.title,
     url: pr.url,
-    author: pr.author.login,
+    author: pr.author,
     repoName: pr.repository.nameWithOwner,
     labels: map(pr.labels.nodes, label => ({
       name: `:${label.name.toLowerCase().replace(/ /g, "_")}:`,
@@ -53,7 +53,8 @@ const renderAttachment = message => pr => {
   message
     .addAttachment()
     .addTitle(pr.title, pr.url)
-    .addAuthor(`${pr.repoName} (${pr.author})`);
+    .addAuthor(`${pr.repoName} (${pr.author.login})`)
+    .addThumbnail(pr.author.avatarUrl);
 
   if (pr.labels.length > 0) {
     message.addColor(pr.labels[0].color);
@@ -88,6 +89,7 @@ const query = (owner, name) => `{
 
         author {
           login
+          avatarUrl
         }
 
         labels(first: 3) {
