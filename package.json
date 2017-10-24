@@ -24,8 +24,5 @@
     "lodash.foreach": "^4.5.0",
     "lodash.groupby": "^4.6.0",
     "lodash.map": "^4.6.0"
-  },
-  "devDependencies": {
-    "claudia": "^2.1.1"
   }
 }

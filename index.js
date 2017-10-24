@@ -46,13 +46,13 @@ const transformData = prs =>
     })),
     assignees: map(pr.assignees.nodes, "name"),
     status: pr.commits.nodes[0].commit.status.state,
-    mergeable: pr.mergeable
+    mergeable: pr.mergeable || pr.labels.nodes.some(label => label.name === 'can merge')
   }));
 
 const renderAttachment = message => pr => {
   message
     .addAttachment()
-    .addTitle(`<${pr.title}|${pr.url}>`)
+    .addTitle(pr.title, pr.url)
     .addAuthor(`${pr.repoName} (${pr.author})`);
 
   if (pr.labels.length > 0) {
