@@ -14,7 +14,7 @@
     "configure": "claudia update --profile claudia --configure-slack-slash-command"
   },
   "dependencies": {
-    "aws-sdk": "^2.6.14",
+    "aws-sdk": "^2.814.0",
     "claudia": "^2.14.2",
     "claudia-bot-builder": "^2.15.0",
     "github": "^9.1.0",
